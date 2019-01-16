@@ -1,0 +1,16 @@
+<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+  
+  <PropertyGroup>
+    <PackageTags>Microsoft;EntityFramework;EF;Database;Data;O/RM;ADO.NET</PackageTags>
+    <Product>Microsoft Entity Framework</Product>
+    <PackageLicenseUrl>http://go.microsoft.com/fwlink/?LinkID=262998</PackageLicenseUrl>
+    <PackageIconUrl>http://go.microsoft.com/fwlink/?LinkID=386613</PackageIconUrl>
+    <PackageProjectUrl>http://go.microsoft.com/fwlink/?LinkID=263480</PackageProjectUrl>
+  </PropertyGroup>
+
+  <!-- HACK: Work around dotnet/arcade#1373 -->
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);NU5125</NoWarn>
+  </PropertyGroup>
+</Project>
