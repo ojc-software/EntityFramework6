@@ -32,7 +32,7 @@
     <file src="../../../artifacts/bin/EntityFramework.SqlServer/$Configuration$/net45/EntityFramework.SqlServer.dll" target="lib/net45/" />
     <file src="../../../artifacts/bin/EntityFramework.SqlServer/$Configuration$/net45/EntityFramework.SqlServer.xml" target="lib/net45/" />
     <file src="../../../artifacts/bin/Migrate/$Configuration$/net45/migrate.exe" target="tools/" />
-    <file src="content/**/*" target="./" />
-    <file src="tools/**/*" target="./" />
+    <file src="content\**\*" target="content/" />
+    <file src="tools\**\*" target="tools/" />
   </files>
 </package>

@@ -103,7 +103,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EntityFramework\EntityFramework.csproj" />
-    <ProjectReference Include="..\EntityFramework.NuGet\EntityFramework.NuGet.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
 
 </Project>
