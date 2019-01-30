@@ -40,7 +40,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <PostBuildEvent>
+    <PostBuildEvent Condition="'$(OS)' == 'Windows_NT'">
       if not exist "$(TargetDir)x86" md "$(TargetDir)x86"
       xcopy /s /y "$(NuGetPackageRoot)Microsoft.SqlServer.Compact\$(MicrosoftSqlServerCompactVersion)\NativeBinaries\x86\*.*" "$(TargetDir)x86"
       if not exist "$(TargetDir)amd64" md "$(TargetDir)amd64"

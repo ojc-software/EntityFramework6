@@ -60,8 +60,9 @@ jobs:
             - script: eng/common/cibuild.sh --configuration $(_BuildConfig) --prepareMachine
               name: Build
 
-        - job: Linux
-          pool: Hosted Ubuntu 1604
-          steps:
-            - script: eng/common/cibuild.sh --configuration $(_BuildConfig) --prepareMachine
-              name: Build
+        # UNDONE: Blocked by dsplaisted/ReferenceAssemblyPackages#2
+        #- job: Linux
+        #  pool: Hosted Ubuntu 1604
+        #  steps:
+        #    - script: eng/common/cibuild.sh --configuration $(_BuildConfig) --prepareMachine
+        #      name: Build
