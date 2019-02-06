@@ -20,6 +20,38 @@
     <ProjectReference Include="..\..\..\src\EntityFramework.SqlServerCompact\EntityFramework.SqlServerCompact.csproj" />
     <ProjectReference Include="..\..\..\src\EntityFramework.SqlServer\EntityFramework.SqlServer.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SqlServer.Types" Version="$(MicrosoftSqlServerTypesVersion)" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Include="$(NuGetPackageRoot)Microsoft.SqlServer.Types\$(MicrosoftSqlServerTypesVersion)\content\SqlServerTypes\Loader.cs">
+      <Link>SqlServerTypes\Loader.cs</Link>
+    </Compile>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="$(NuGetPackageRoot)Microsoft.SqlServer.Types\$(MicrosoftSqlServerTypesVersion)\content\readme.htm">
+      <Link>SqlServerTypes\readme.htm</Link>
+    </Content>
+    <Content Include="$(NuGetPackageRoot)Microsoft.SqlServer.Types\$(MicrosoftSqlServerTypesVersion)\nativeBinaries\x64\msvcr120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>SqlServerTypes\x64\msvcr120.dll</Link>
+    </Content>
+    <Content Include="$(NuGetPackageRoot)Microsoft.SqlServer.Types\$(MicrosoftSqlServerTypesVersion)\nativeBinaries\x64\SqlServerSpatial140.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>SqlServerTypes\x64\SqlServerSpatial140.dll</Link>
+    </Content>
+    <Content Include="$(NuGetPackageRoot)Microsoft.SqlServer.Types\$(MicrosoftSqlServerTypesVersion)\nativeBinaries\x86\msvcr120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>SqlServerTypes\x86\msvcr120.dll</Link>
+    </Content>
+    <Content Include="$(NuGetPackageRoot)Microsoft.SqlServer.Types\$(MicrosoftSqlServerTypesVersion)\nativeBinaries\x86\SqlServerSpatial140.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>SqlServerTypes\x86\SqlServerSpatial140.dll</Link>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="Objects\TransactionsModel.csdl" />

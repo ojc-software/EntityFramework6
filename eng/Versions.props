@@ -12,6 +12,7 @@
     <EnvDTEVersion>8.0.2</EnvDTEVersion>
     <MicrosoftPowerShell2ReferenceAssembliesVersion>1.0.0</MicrosoftPowerShell2ReferenceAssembliesVersion>
     <MicrosoftSqlServerCompactVersion>4.0.8876.1</MicrosoftSqlServerCompactVersion>
+    <MicrosoftSqlServerTypesVersion>14.0.1016.290</MicrosoftSqlServerTypesVersion>
     <MicrosoftVisualStudioShellInterop80Version>8.0.50728</MicrosoftVisualStudioShellInterop80Version>
     <MoqVersion>4.0.10827</MoqVersion>
     <VSLangProjVersion>7.0.3301</VSLangProjVersion>
