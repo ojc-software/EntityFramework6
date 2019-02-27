@@ -127,6 +127,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
         internal static List<XElement> ConstructAssociationSetMappings(
             EdmItemCollection edm, string csdlNamespace, Version targetFrameworkVersion)
         {
+            string prefix = OutputGeneratorHelpers.GetTablePrefix(edm.GetNamespace());
             var associationSetMappings = new List<XElement>();
             foreach (var associationSet in edm.GetAllAssociationSets())
             {
@@ -141,7 +142,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                         _msl + "AssociationSetMapping",
                         new XAttribute("Name", associationSet.Name),
                         new XAttribute("TypeName", csdlNamespace + "." + associationSet.ElementType.Name),
-                        new XAttribute("StoreEntitySet", associationSet.Name));
+                        new XAttribute("StoreEntitySet", prefix + associationSet.Name));
                     var end1Property = new XElement(_msl + "EndProperty", new XAttribute("Name", association.GetEnd1().Name));
                     foreach (var property in entityType1.GetKeyProperties())
                     {
@@ -149,7 +150,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                             new XElement(
                                 _msl + "ScalarProperty", new XAttribute("Name", property.Name),
                                 new XAttribute(
-                                    "ColumnName", OutputGeneratorHelpers.GetFkName(association, association.GetEnd2(), property.Name))));
+                                    "ColumnName", OutputGeneratorHelpers.GetFkNameM2M(association, association.GetEnd2(), property.Name))));
                     }
                     associationSetMapping.Add(end1Property);
                     var end2Property = new XElement(_msl + "EndProperty", new XAttribute("Name", association.GetEnd2().Name));
@@ -159,7 +160,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                             new XElement(
                                 _msl + "ScalarProperty", new XAttribute("Name", property.Name),
                                 new XAttribute(
-                                    "ColumnName", OutputGeneratorHelpers.GetFkName(association, association.GetEnd1(), property.Name))));
+                                    "ColumnName", OutputGeneratorHelpers.GetFkNameM2M(association, association.GetEnd1(), property.Name))));
                     }
                     associationSetMapping.Add(end2Property);
                     associationSetMappings.Add(associationSetMapping);

@@ -360,7 +360,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
             // For all *:* Associations, we need a pair table and an associated pair EntityType
             foreach (var assoc in edmItemCollection.GetItems<AssociationType>().Where(a => a.IsManyToMany()))
             {
-                var entityTypeElement = new XElement(_ssdl + "EntityType", new XAttribute("Name", assoc.Name));
+                var entityTypeElement = new XElement(_ssdl + "EntityType", new XAttribute("Name", OutputGeneratorHelpers.GetTablePrefix(assoc.NamespaceName) + assoc.Name));
 
                 // We determine the properties as the aggregation of the primary keys from both ends of the association.
                 // These properties are also the keys of this new EntityTyp
@@ -370,14 +370,14 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                     keyElement.Add(
                         new XElement(
                             _ssdl + "PropertyRef",
-                            new XAttribute("Name", OutputGeneratorHelpers.GetFkName(assoc, assoc.GetEnd2(), key.Name))));
+                            new XAttribute("Name", OutputGeneratorHelpers.GetFkNameM2M(assoc, assoc.GetEnd2(), key.Name))));
                 }
                 foreach (var key in assoc.GetEnd2().GetKeyProperties())
                 {
                     keyElement.Add(
                         new XElement(
                             _ssdl + "PropertyRef",
-                            new XAttribute("Name", OutputGeneratorHelpers.GetFkName(assoc, assoc.GetEnd1(), key.Name))));
+                            new XAttribute("Name", OutputGeneratorHelpers.GetFkNameM2M(assoc, assoc.GetEnd1(), key.Name))));
                 }
                 entityTypeElement.Add(keyElement);
 
@@ -386,7 +386,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                 {
                     var propertyElement = new XElement(
                         _ssdl + "Property",
-                        new XAttribute("Name", OutputGeneratorHelpers.GetFkName(assoc, assoc.GetEnd2(), property.Name)),
+                        new XAttribute("Name", OutputGeneratorHelpers.GetFkNameM2M(assoc, assoc.GetEnd2(), property.Name)),
                         new XAttribute("Type", property.GetStoreType(providerManifest)));
 
                     // Add the facets
@@ -404,7 +404,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                 {
                     var propertyElement = new XElement(
                         _ssdl + "Property",
-                        new XAttribute("Name", OutputGeneratorHelpers.GetFkName(assoc, assoc.GetEnd1(), property.Name)),
+                        new XAttribute("Name", OutputGeneratorHelpers.GetFkNameM2M(assoc, assoc.GetEnd1(), property.Name)),
                         new XAttribute("Type", property.GetStoreType(providerManifest)));
 
                     // Add the facets
@@ -449,7 +449,8 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
             // Ignore *:* associations for now, just translate the CSDL Associations into SSDL Associations
             foreach (var association in edm.GetItems<AssociationType>().Where(a => !a.IsManyToMany()))
             {
-                var associationElement = new XElement(_ssdl + "Association", new XAttribute("Name", association.Name));
+                var associationElement = new XElement(_ssdl + "Association", new XAttribute("Name", 
+                    OutputGeneratorHelpers.GetTablePrefix(edm.GetNamespace()) + association.Name));
 
                 var principalEnd = association.GetPrincipalEnd();
                 var dependentEnd = association.GetDependentEnd();
@@ -554,10 +555,10 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                             new XElement(
                                 _ssdl + "End",
                                 new XAttribute("Role", m2mAssoc.Name),
-                                new XAttribute("Type", ssdlNamespace + "." + m2mAssoc.Name),
+                                new XAttribute("Type", ssdlNamespace + "." + OutputGeneratorHelpers.GetTablePrefix(entityType1.NamespaceName) + m2mAssoc.Name),
                                 new XAttribute("Multiplicity", "*")));
                         associationElement1.Add(
-                            ConstructReferentialConstraint(m2mAssoc.GetEnd1().Name, m2mAssoc.GetEnd1(), m2mAssoc.Name, m2mAssoc.GetEnd2()));
+                            ConstructReferentialConstraint(m2mAssoc.GetEnd1().Name, m2mAssoc.GetEnd1(), m2mAssoc.Name, m2mAssoc.GetEnd2(), true));
                         OutputGeneratorHelpers.CopyExtendedPropertiesToSsdlElement(m2mAssoc, associationElement1);
                         associations.Add(associationElement1);
 
@@ -568,7 +569,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                             new XElement(
                                 _ssdl + "End",
                                 new XAttribute("Role", m2mAssoc.Name),
-                                new XAttribute("Type", ssdlNamespace + "." + m2mAssoc.Name),
+                                new XAttribute("Type", ssdlNamespace + "." + OutputGeneratorHelpers.GetTablePrefix(entityType1.NamespaceName) + m2mAssoc.Name),
                                 new XAttribute("Multiplicity", "*")));
                         associationElement2.Add(
                             new XElement(
@@ -578,7 +579,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                                     "Type", ssdlNamespace + "." + OutputGeneratorHelpers.GetStorageEntityTypeName(entityType2, edm)),
                                 new XAttribute("Multiplicity", "1")));
                         associationElement2.Add(
-                            ConstructReferentialConstraint(m2mAssoc.GetEnd2().Name, m2mAssoc.GetEnd2(), m2mAssoc.Name, m2mAssoc.GetEnd1()));
+                            ConstructReferentialConstraint(m2mAssoc.GetEnd2().Name, m2mAssoc.GetEnd2(), m2mAssoc.Name, m2mAssoc.GetEnd1(), true));
                         OutputGeneratorHelpers.CopyExtendedPropertiesToSsdlElement(m2mAssoc, associationElement2);
                         associations.Add(associationElement2);
                     }
@@ -595,7 +596,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                     new XAttribute(
                         "Name",
                         String.Format(
-                            CultureInfo.CurrentCulture, Resources.CodeViewFKConstraintDerivedType, derivedType.Name,
+                            CultureInfo.CurrentCulture, Resources.CodeViewFKConstraintDerivedType, OutputGeneratorHelpers.GetStorageEntityTypeName(derivedType, edm),
                             derivedType.BaseType.Name)));
                 var baseTypeRole = new XElement(
                     _ssdl + "End",
@@ -626,7 +627,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
 
         internal static XElement ConstructReferentialConstraint(
             string principalRole, AssociationEndMember principalEnd,
-            string dependentRole, AssociationEndMember dependentEnd)
+            string dependentRole, AssociationEndMember dependentEnd, bool M2M = false)
         {
             var refConstraintElement = new XElement(_ssdl + "ReferentialConstraint");
 
@@ -643,7 +644,10 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                         principalEntityType.GetKeyProperties().Select(k => k.Name),
                         dependentRole,
                         principalEntityType.GetKeyProperties().Select(
-                            k => OutputGeneratorHelpers.GetFkName(
+                            k => M2M ? OutputGeneratorHelpers.GetFkNameM2M(
+                                dependentEnd.DeclaringType as AssociationType,
+                                dependentEnd,
+                                k.Name) : OutputGeneratorHelpers.GetFkName(
                                 dependentEnd.DeclaringType as AssociationType,
                                 dependentEnd,
                                 k.Name)));
@@ -701,7 +705,8 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
             foreach (var associationSet in edm.GetAllAssociationSets().Where(set => set.GetAssociation().IsManyToMany()))
             {
                 var entitySetElement = ConstructEntitySet(
-                    ssdlNamespace, associationSet.Name, associationSet.ElementType.Name, "Tables", databaseSchemaName);
+                    ssdlNamespace, OutputGeneratorHelpers.GetTablePrefix(associationSet.ElementType.NamespaceName) + associationSet.Name, 
+                    OutputGeneratorHelpers.GetTablePrefix(associationSet.ElementType.NamespaceName) + associationSet.ElementType.Name, "Tables", databaseSchemaName);
                 entityContainerElement.Add(entitySetElement);
             }
 
@@ -727,7 +732,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                             assoc.GetEnd1().Name,
                             OutputGeneratorHelpers.GetStorageEntityTypeName(assoc.GetEnd1().GetEntityType(), edm),
                             assoc.Name,
-                            associationSet.Name);
+                            OutputGeneratorHelpers.GetTablePrefix(associationSet.ElementType.NamespaceName) + associationSet.Name);
 
                         // create an association from the second end to the pair table
                         var associationSet2Element = ConstructAssociationSet(
@@ -737,7 +742,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                             assoc.GetEnd2().Name,
                             OutputGeneratorHelpers.GetStorageEntityTypeName(assoc.GetEnd2().GetEntityType(), edm),
                             assoc.Name,
-                            associationSet.Name);
+                            OutputGeneratorHelpers.GetTablePrefix(associationSet.ElementType.NamespaceName) + associationSet.Name);
 
                         entityContainerElement.Add(associationSet1Element);
                         entityContainerElement.Add(associationSet2Element);
@@ -749,7 +754,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                         var associationSetElement = ConstructAssociationSet(
                             ssdlNamespace,
                             associationSet.Name,
-                            assoc.Name,
+                            OutputGeneratorHelpers.GetTablePrefix(assoc.GetEnd1().GetEntityType().NamespaceName) + assoc.Name,
                             assoc.GetEnd1().Name,
                             OutputGeneratorHelpers.GetStorageEntityTypeName(assoc.GetEnd1().GetEntityType(), edm),
                             assoc.GetEnd2().Name,
@@ -767,10 +772,10 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                     ConstructAssociationSet(
                         ssdlNamespace,
                         String.Format(
-                            CultureInfo.CurrentCulture, Resources.CodeViewFKConstraintDerivedType, derivedType.Name,
+                            CultureInfo.CurrentCulture, Resources.CodeViewFKConstraintDerivedType, OutputGeneratorHelpers.GetStorageEntityTypeName(derivedType, edm),
                             derivedType.BaseType.Name),
                         String.Format(
-                            CultureInfo.CurrentCulture, Resources.CodeViewFKConstraintDerivedType, derivedType.Name,
+                            CultureInfo.CurrentCulture, Resources.CodeViewFKConstraintDerivedType, OutputGeneratorHelpers.GetStorageEntityTypeName(derivedType, edm),
                             derivedType.BaseType.Name),
                         derivedType.BaseType.Name,
                         OutputGeneratorHelpers.GetStorageEntityTypeName(derivedType.BaseType as EntityType, edm),

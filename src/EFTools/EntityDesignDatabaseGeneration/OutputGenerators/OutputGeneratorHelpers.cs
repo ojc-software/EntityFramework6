@@ -14,6 +14,15 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
 
     internal static class OutputGeneratorHelpers
     {
+        // OJC
+        internal static string GetTablePrefix(string nameSpace)
+        {
+            int i = nameSpace.LastIndexOf('.');
+            if (i >= 0)
+                nameSpace = nameSpace.Substring(i + 1);
+            return nameSpace + "_";
+        }
+
         // <summary>
         //     Infer a Storage-layer EntityType name from a Conceptual-layer EntityType
         //     1. If this is a root type, then we will use the EntitySet name.
@@ -24,7 +33,7 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
         internal static string GetStorageEntityTypeName(EntityType entityType, EdmItemCollection edm)
         {
             var storageEntityTypeName = String.Empty;
-
+/*
             // First get the EntitySet name. Unfortunately the Metadata APIs don't have the ability to
             // get an EntitySet from an EntityType, so we have to incur this perf hit.
             var rootOrSelf = entityType.GetRootOrSelf();
@@ -42,6 +51,10 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
             {
                 storageEntityTypeName = String.Format(CultureInfo.CurrentCulture, "{0}_{1}", storageEntityTypeName, entityType.Name);
             }
+*/
+            storageEntityTypeName = entityType.Name;
+
+            storageEntityTypeName = GetTablePrefix(edm.GetNamespace()) + storageEntityTypeName;
 
             return storageEntityTypeName;
         }
@@ -64,7 +77,9 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                 && principalEnd != null)
             {
                 associationName = String.Format(
-                    CultureInfo.CurrentCulture, Resources.CodeViewManyToManyAssocName, association.Name, principalEnd.Name);
+                    CultureInfo.CurrentCulture, Resources.CodeViewManyToManyAssocName, 
+                    OutputGeneratorHelpers.GetTablePrefix(principalEnd.GetEntityType().NamespaceName) + association.Name, 
+                    principalEnd.Name);
             }
             return associationName;
         }
@@ -85,7 +100,9 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
                 && principalEnd != null)
             {
                 associationSetName = String.Format(
-                    CultureInfo.CurrentCulture, Resources.CodeViewManyToManyAssocName, associationSet.Name, principalEnd.Name);
+                    CultureInfo.CurrentCulture, Resources.CodeViewManyToManyAssocName,
+                    OutputGeneratorHelpers.GetTablePrefix(principalEnd.GetEntityType().NamespaceName) + associationSet.Name, 
+                    principalEnd.Name);
             }
             return associationSetName;
         }
@@ -117,9 +134,14 @@ namespace Microsoft.Data.Entity.Design.DatabaseGeneration.OutputGenerators
             }
 
             Debug.Assert(!String.IsNullOrEmpty(fkName), "Foreign key name could not be determined for the association " + association.Name);
+            //fkName = GetTablePrefix(association.GetEnd1().GetEntityType().NamespaceName) + fkName;
             return fkName;
         }
-
+        internal static string GetFkNameM2M(AssociationType association, AssociationEndMember endWithNavProp, string keyPropertyName)
+        {
+            var principalEnd = association.GetOtherEnd(endWithNavProp);
+            return String.Format(CultureInfo.CurrentCulture, "{0}_{1}", principalEnd.GetEntityType().Name, keyPropertyName);
+        }
         // <summary>
         //     Construct storage entity container name from CSDL Namespace name.
         //     If the CSDL namespace name is null, then this will just return "StoreContainer".
